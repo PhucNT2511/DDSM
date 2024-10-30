@@ -13,7 +13,7 @@ from torchvision.utils import make_grid, save_image
 from torchvision import transforms
 from tqdm import trange
 
-from pymoo.algorithms.moo.nsga2 import NSGA2
+from pymoo.algorithms.moo.nsga2 import NSGA2  ### Thư viện
 from pymoo.core.problem import Problem
 from pymoo.optimize import minimize
 from pymoo.core.mutation import Mutation
@@ -74,10 +74,12 @@ flags.DEFINE_string('ckpt_name', 'ckpt', help='ckpt name')
 flags.DEFINE_bool('slimmable_unet', False, help='use slimmable unet')
 flags.DEFINE_bool('slimmable_g16', False, help='g16 slimmable unet')
 flags.DEFINE_bool('sandwich', False, help='use sandiwch training')
-flags.DEFINE_float('min_width', 0.25, help="min_width")
+flags.DEFINE_float('min_width', 0.25, help="min_width") ################# min_width = 0.25
 flags.DEFINE_integer('num_sandwich_sampling', 3, help='the number of sandwich training samples')
-flags.DEFINE_multi_float('candidate_width', [0.75, 0.5], help='candidate_width')
-flags.DEFINE_float('assigned_width', 1.0, help="assigned_width")
+flags.DEFINE_multi_float('candidate_width', [0.75, 0.5], help='candidate_width')    ########### 2 loại width còn lại
+flags.DEFINE_float('assigned_width', 1.0, help="assigned_width")  ################ max_width
+############ Nói chung có 4 loại width nên mới dẫn đến chỉ có 4 số của macs
+
 # ensemble
 flags.DEFINE_bool('eval_ensemble', False, help='eval ensemble model')
 flags.DEFINE_string('large_logdir', './logs/DDPM_CIFAR10_EPS', help='large model log directory')
@@ -517,7 +519,8 @@ def search():
                 macs[pop] = get_macs(x[pop])
                 print("Model Macs: {} MMac".format(macs[pop]))
 
-            out["F"] = FID * self.fid_weight + macs * self.macs_weight
+            out["F"] = FID * self.fid_weight + macs * self.macs_weight ###### 50000 ảnh để đánh giá FID, fid_weight = 0.5; macs_weight = 0.001
+            ###### macss
             # out["G"] = baseline_FID - FID
 
     class MySampling(FloatRandomSampling):
@@ -557,6 +560,7 @@ def search():
             return X
 
     problem = StepAwareProblem(fid_weight=FLAGS.fid_weight, macs_weight=FLAGS.macs_weight)
+    ######## Dùng thư viện
     algorithm = NSGA2(pop_size=FLAGS.pop_size,
                   sampling=MySampling(),
                   crossover=SinglePointCrossover(),
