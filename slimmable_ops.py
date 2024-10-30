@@ -1,7 +1,7 @@
 from torch import nn
 
-
-def make_divisible(v, divisible_factor=8, min_value=1):
+## Trả về số gần v nhất chia hết cho divisible_factor
+def make_divisible(v, divisible_factor=8, min_value=1):  
     """
     forked from slim:
     https://github.com/tensorflow/models/blob/\
@@ -21,18 +21,18 @@ class SlimmableConv2d(nn.Conv2d):
     """
     SuperNet Convolution Module.
 
-    automatically adapt to any number of input channels.
+    automatically adapt to any number of input channels. -- input channels??
 
     capable of conducting convolutions according to designate width.
 
     Args:
-        us (bool): 是否可以裁剪
+        us (bool): Whether it can be pruned.
             Default: True
-        divisible_factor (int): 使out_channel为几的整数倍
+        divisible_factor (int): Makes out_channel a multiple of what number.
             Default: 8
-        divisor (bool): 裁剪时channel切割份数
+        divisor (bool): Number of segments when pruning channels
             Default: 8
-        linked (int or string or None): 用于裁剪宽度时skip connection的channel对齐的标志
+        linked (int or string or None): A flag for aligning channel skip connections when pruning width.
             Default: None
     """
     def __init__(self,
@@ -44,7 +44,7 @@ class SlimmableConv2d(nn.Conv2d):
                  dilation=1,
                  groups=1,
                  bias=True,
-                 slimmable=True,
+                 slimmable=True, #################
                  divisible_factor=8,):
         super(SlimmableConv2d, self).__init__(
             in_channels,
@@ -67,18 +67,20 @@ class SlimmableConv2d(nn.Conv2d):
         input_size = input.size()
         in_channels = input_size[1]
         if self.slimmable:
-            out_channels = make_divisible(self.out_channels * self.width_mult, self.divisible_factor)
+            out_channels = make_divisible(self.out_channels * self.width_mult, self.divisible_factor) ################### Tính số lượng nơ-ron dùng ở layer hiện tại
             # depthwise
             self.groups = in_channels if self.depthwise else 1
             out_channels = in_channels if self.depthwise else out_channels
         else:
             out_channels = self.out_channels
 
-        weight = self.weight[:out_channels,:in_channels,:, :]
+        weight = self.weight[:out_channels,:in_channels,:, :]   ################# lấy số ít trọng số của các nơ-ron đã chọn cho sub-network 
         if self.bias is not None:
-            bias = self.bias[:out_channels]
+            bias = self.bias[:out_channels] ####################### bias
         else:
             bias = self.bias
+
+        ############## Định nghĩa lại lớp rồi trả về
         y = nn.functional.conv2d(input, weight, bias, self.stride,
                                  self.padding, self.dilation, self.groups)
         return y
@@ -123,6 +125,7 @@ class SlimmableBatchNorm2d(nn.BatchNorm2d):
         c = input_size[1]
         self.num_features = c
         if self.bn_setting == 'max':
+            ########## Định nghĩa batch_norm ____________ Vẫn là batch_norm nhé 
             y = nn.functional.batch_norm(input, self.bn[0].running_mean[:c],
                                          self.bn[0].running_var[:c],
                                          weight[:c], bias[:c], self.training,
